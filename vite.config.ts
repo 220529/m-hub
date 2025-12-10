@@ -1,7 +1,7 @@
 import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
-import { readdirSync, statSync, existsSync } from 'fs';
+import { readdirSync, statSync, existsSync, cpSync, rmSync } from 'fs';
 
 // 自动扫描 pages 目录，生成多页面入口（只扫描有 index.html 的目录）
 function getPageEntries() {
@@ -58,8 +58,39 @@ function devServerRewrite(): Plugin {
   };
 }
 
+// 构建后处理：移动文件到正确位置
+function postBuildPlugin(): Plugin {
+  return {
+    name: 'post-build',
+    closeBundle() {
+      const distDir = resolve(__dirname, 'dist');
+      const srcPagesDir = resolve(distDir, 'src/pages');
+      const staticSrcDir = resolve(__dirname, 'src/pages/static');
+
+      // 移动 src/pages/* 到 dist 根目录
+      if (existsSync(srcPagesDir)) {
+        const pages = readdirSync(srcPagesDir);
+        pages.forEach((page) => {
+          const src = resolve(srcPagesDir, page);
+          const dest = resolve(distDir, page);
+          if (statSync(src).isDirectory()) {
+            cpSync(src, dest, { recursive: true });
+          }
+        });
+        // 删除 src 目录
+        rmSync(resolve(distDir, 'src'), { recursive: true, force: true });
+      }
+
+      // 复制 static 目录
+      if (existsSync(staticSrcDir)) {
+        cpSync(staticSrcDir, resolve(distDir, 'static'), { recursive: true });
+      }
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), devServerRewrite()],
+  plugins: [react(), devServerRewrite(), postBuildPlugin()],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
