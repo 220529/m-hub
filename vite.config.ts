@@ -66,6 +66,7 @@ function postBuildPlugin(): Plugin {
       const distDir = resolve(__dirname, 'dist');
       const srcPagesDir = resolve(distDir, 'src/pages');
       const staticSrcDir = resolve(__dirname, 'src/pages/static');
+      const rootIndexHtml = resolve(__dirname, 'index.html');
 
       // 移动 src/pages/* 到 dist 根目录
       if (existsSync(srcPagesDir)) {
@@ -84,6 +85,11 @@ function postBuildPlugin(): Plugin {
       // 复制 static 目录
       if (existsSync(staticSrcDir)) {
         cpSync(staticSrcDir, resolve(distDir, 'static'), { recursive: true });
+      }
+
+      // 复制根目录 index.html
+      if (existsSync(rootIndexHtml)) {
+        cpSync(rootIndexHtml, resolve(distDir, 'index.html'));
       }
     },
   };
