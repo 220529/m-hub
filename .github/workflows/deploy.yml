@@ -42,7 +42,7 @@ jobs:
           target: /app/m-hub/
           strip_components: 1
 
-      - name: Set permissions
+      - name: Set permissions and reload nginx
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -50,4 +50,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
             chmod -R 755 /app/m-hub
+            # 重载 nginx 配置
+            docker exec nginx-gateway nginx -s reload || echo "nginx reload skipped"
             echo "✅ m-hub 部署完成!"
