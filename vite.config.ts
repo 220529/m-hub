@@ -82,9 +82,15 @@ function postBuildPlugin(): Plugin {
         rmSync(resolve(distDir, 'src'), { recursive: true, force: true });
       }
 
-      // 复制 static 目录
-      if (existsSync(staticSrcDir)) {
-        cpSync(staticSrcDir, resolve(distDir, 'static'), { recursive: true });
+      // 复制 public 目录下的文件到 dist 根目录（直接访问，不带前缀）
+      const publicDir = resolve(__dirname, 'public');
+      if (existsSync(publicDir)) {
+        const files = readdirSync(publicDir);
+        files.forEach((file) => {
+          const src = resolve(publicDir, file);
+          const dest = resolve(distDir, file);
+          cpSync(src, dest, { recursive: true });
+        });
       }
 
       // 复制根目录 index.html
